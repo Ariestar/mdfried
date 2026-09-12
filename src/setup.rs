@@ -95,6 +95,15 @@ pub fn setup_graphics(
         return Ok(SetupResult::TextSizing(picker));
     }
 
+    // Apply a protocol override BEFORE the halfblocks early-return below, so
+    // that --debug-override-protocol-type can rescue terminals whose capability
+    // query was swallowed and fell back to Halfblocks. It used to run after
+    // both early-returns, so on exactly those terminals it never took effect.
+    if let Some(debug_override_protocol_type) = debug_override_protocol_type {
+        log::warn!("debug_override_protocol_type set to {debug_override_protocol_type:?}");
+        picker.set_protocol_type(debug_override_protocol_type);
+    }
+
     if picker.protocol_type() == ProtocolType::Halfblocks {
         return Ok(SetupResult::AsciiArt(picker));
     }
@@ -154,11 +163,6 @@ pub fn setup_graphics(
     };
 
     let font_size = picker.font_size();
-
-    if let Some(debug_override_protocol_type) = debug_override_protocol_type {
-        log::warn!("debug_override_protocol_type set to {debug_override_protocol_type:?}");
-        picker.set_protocol_type(debug_override_protocol_type);
-    }
 
     Ok(SetupResult::Complete(
         picker,
